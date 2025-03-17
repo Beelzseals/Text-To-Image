@@ -1,0 +1,64 @@
+{
+    "prompts": [
+        {
+            "original": {
+                "positive": "long black haired woman slightly tilting her head to the right, (looking away from the camera to the right), (facing the camera with upper body),(open eyes), 8k, upper body, (wind blowing her hair in her face from the right), clear sky, faraway mountains as background, natural light",
+                "negative": "bad face, cross eyes, closed eyes, [nude]",
+                "summary": "tilted_head_woman"
+            },
+            "human": {
+                "postive": [
+                    "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera, upper body facing the camera, open natural eyes, gentle expression, realistic skin , 8k, natural sunlight, (wind blowing strands of hair across her face), clear sky, distant mountains, shallow depth of field, focus on face,bokeh",
+                    "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera, upper body facing the camera, open natural eyes, gentle expression, realistic skin , 8k, natural sunlight, (wind blowing hair across her face), clear sky, distant mountains, shallow depth of field, focus on face,bokeh"
+                ]
+            },
+            "ai": {
+                "positive": "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera to the right, upper body facing the camera, open natural eyes, soft neutral expression, realistic skin texture, 8k ultra-high resolution, natural sunlight, wind gently blowing strands of her hair across her face from the right, clear blue sky, distant mountains in the background, shallow depth of field, sharp focus on face, smooth bokeh background",
+                "negative": "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, [nude], extra limbs, distorted fingers, poorly drawn hands, harsh shadows, unnatural lighting, lens flare, disfigured, mutated, deformed, out of focus"
+            },
+            "result": {
+                "positive": "",
+                "negative": ""
+            }
+        },
+        {
+            "original": {
+                "positive": "A young woman, soft inviting expression, open natural eyes, head gently tilted downward, gazing upward directly at the camera, subtle smile, playfully bites into lower lips, casual dress, ambient internal lighting, 8k, warm and cosy room, bokeh",
+                "negative": "bad face, cross eyes, closed eyes, plastic texture,",
+                "summary": "woman_looking_up"
+            },
+            "human": {},
+            "ai": {},
+            "result": {
+                "positive": "",
+                "negative": ""
+            }
+        },
+        {
+            "original": {
+                "positive": "young woman with long hair, sitting, arms around knees, smiling, looking at the camera, open eyes, casual dress, 8k, natural light, sunlight from the corner of the picture, green grass, clear sky, shallow depth of field, bokeh",
+                "negative": "bad face, cross eyes, closed eyes, plastic texture, [nude], bad anatomy, bad hands, wide shoulders",
+                "summary": "sitting_woman"
+            },
+            "human": {},
+            "ai": {},
+            "result": {
+                "positive": "",
+                "negative": ""
+            }
+        },
+        {
+            "original": {
+                "positive": "Middle aged woman sitting in a chair, looking downward at the camera, open stern eyes, neutral expression, dark leather dress, 8k, natural light, warm and cosy room, bokeh",
+                "negative": "bad face, cross eyes, closed eyes, plastic texture, [nude], bad anatomy, bad hands, wide shoulders",
+                "summary": "dominant_woman"
+            },
+            "human": {},
+            "ai": {},
+            "result": {
+                "positive": "",
+                "negative": ""
+            }
+        }
+    ]
+}

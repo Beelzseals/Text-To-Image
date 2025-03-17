@@ -1,0 +1,15 @@
+torch
+diffusers
+numpy
+openai
+transformers
+accelerate
+peft
+PIL
+scipy
+torchvision
+timm>=0.9.16
+sentencepiece
+attrdict
+einops
+fastapi

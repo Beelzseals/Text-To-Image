@@ -9,6 +9,4 @@ pillow
 scipy
 torchvision
 sentencepiece
-attrdict
-einops
 fastapi

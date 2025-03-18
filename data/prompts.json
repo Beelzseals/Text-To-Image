@@ -6,20 +6,20 @@
                 "negative": "bad face, cross eyes, closed eyes, [nude]",
                 "summary": "tilted_head_woman"
             },
-            "human": {
+            "human_revised": {
                 "postive": [
                     "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera, upper body facing the camera, open natural eyes, gentle expression, realistic skin , 8k, natural sunlight, (wind blowing strands of hair across her face), clear sky, distant mountains, shallow depth of field, focus on face,bokeh",
                     "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera, upper body facing the camera, open natural eyes, gentle expression, realistic skin , 8k, natural sunlight, (wind blowing hair across her face), clear sky, distant mountains, shallow depth of field, focus on face,bokeh"
                 ]
             },
-            "ai": {
-                "positive": "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera to the right, upper body facing the camera, open natural eyes, soft neutral expression, realistic skin texture, 8k ultra-high resolution, natural sunlight, wind gently blowing strands of her hair across her face from the right, clear blue sky, distant mountains in the background, shallow depth of field, sharp focus on face, smooth bokeh background",
-                "negative": "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, [nude], extra limbs, distorted fingers, poorly drawn hands, harsh shadows, unnatural lighting, lens flare, disfigured, mutated, deformed, out of focus"
+            "ai_revised": {
+                "positive": [
+                    "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera to the right, upper body facing the camera, open natural eyes, soft neutral expression, realistic skin texture, 8k ultra-high resolution, natural sunlight, wind gently blowing strands of her hair across her face from the right, clear blue sky, distant mountains in the background, shallow depth of field, sharp focus on face, smooth bokeh background"
+                ],
+                "negative": [
+                    "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, [nude], extra limbs, distorted fingers, poorly drawn hands, harsh shadows, unnatural lighting, lens flare, disfigured, mutated, deformed, out of focus"
+                ]
             },
-            "result": {
-                "positive": "",
-                "negative": ""
-            }
         },
         {
             "original": {
@@ -27,12 +27,14 @@
                 "negative": "bad face, cross eyes, closed eyes, plastic texture,",
                 "summary": "woman_looking_up"
             },
-            "human": {},
-            "ai": {},
-            "result": {
-                "positive": "",
-                "negative": ""
-            }
+            "human_revised": {
+                "postive": [],
+                "negative": []
+            },
+            "ai_revised": {
+                "positive": [],
+                "negative": []
+            },
         },
         {
             "original": {
@@ -40,12 +42,14 @@
                 "negative": "bad face, cross eyes, closed eyes, plastic texture, [nude], bad anatomy, bad hands, wide shoulders",
                 "summary": "sitting_woman"
             },
-            "human": {},
-            "ai": {},
-            "result": {
-                "positive": "",
-                "negative": ""
-            }
+            "human_revised": {
+                "postive": [],
+                "negative": []
+            },
+            "ai_revised": {
+                "positive": [],
+                "negative": []
+            },
         },
         {
             "original": {
@@ -53,12 +57,17 @@
                 "negative": "bad face, cross eyes, closed eyes, plastic texture, [nude], bad anatomy, bad hands, wide shoulders",
                 "summary": "dominant_woman"
             },
-            "human": {},
-            "ai": {},
-            "result": {
-                "positive": "",
-                "negative": ""
-            }
+            "human_revised": {
+                "postive": [],
+                "negative": []
+            },
+            "ai_revised": {
+                "positive": [
+                    "A middle-aged woman seated in a chair, gazing downward toward the camera with a neutral expression and open, serious eyes. She is wearing a dark leather dress, captured in an 8k, natural light setting within a warm and cozy room. The background features a pleasing bokeh effect.",
+                    "A middle-aged woman seated in a chair, looking down towards the camera with a calm, thoughtful expression. She wears a dark leather dress. The image is captured in high resolution with natural lighting, in a warm and cozy room. The background is softly blurred for a bokeh effect."
+                ],
+                "negative": []
+            },
         }
     ]
 }

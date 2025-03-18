@@ -5,7 +5,7 @@ openai
 transformers
 accelerate
 peft
-PIL
+pillow
 scipy
 torchvision
 sentencepiece

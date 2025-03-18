@@ -1,16 +1,21 @@
 import os
 import requests
-from openai import BadRequestError
-from models.used_models import load_sd_model, load_flux_model, load_openai_client
-from utils.custom_log import create_logger
+import base64
 import json
 import datetime
+
+from io import BytesIO
+from models.used_models import load_sd_model, load_flux_model, load_openai_client
+from utils.custom_log import create_logger
+from PIL import Image
 
 flux_folder = "images/Flux"
 sd_folder = "images/Stable_diffusion"
 dalle_folder = "images/Dall_e"
 current_day = datetime.datetime.now().strftime("%Y-%m-%d")
 logger = create_logger()
+
+
 
 def init_folders():
     os.makedirs(flux_folder, exist_ok=True)
@@ -44,6 +49,7 @@ def generate_images(model_type, prompt, neg_prompt, prompt_summary, folder):
             images.append(img)
     save_hf_images(images, prompt_summary, folder)
 
+
 def sanitize_prompt(prompt, client):
     system_prompt = (
         "You are an expert at rewriting image generation prompts so they do not violate "
@@ -69,51 +75,55 @@ def sanitize_prompt(prompt, client):
     print(completion.choices[0].message.content)
     return completion.choices[0].message.content
 
-def generate_dalle_images(prompt, prompt_summary):
+
+def save_dalle_images(res, prompt_summary):
+    for i, img_data in enumerate(res.data):
+        b64_img = img_data.b64_json
+        decoded_img_data = base64.b64decode(b64_img)
+        img = Image.open(BytesIO(decoded_img_data))
+        time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+        file_name = f"images/Dall_e/{current_day}/{prompt_summary}_{time}_{i}.png"
+        img.save(file_name)
+        logger.info(f"Saved image: {file_name}")
+
+
+def generate_dalle_images(prompt, prompt_summary, retry_count=0, max_retries=3):
     client = load_openai_client()
     try:
+        # DALL-E 2 generation
         d2_res = client.images.generate(
             model="dall-e-2",
             prompt=prompt,
             size="1024x1024",
             quality="hd",
+            response_format="b64_json",
             n=3
         )
+        # DALL-E 3 generation
         d3_res = client.images.generate(
             model="dall-e-3",
             prompt=prompt,
             size="1024x1024",
             quality="hd",
             style="natural",
+            response_format="b64_json",
             n=1
         )
-    except BadRequestError as e:
-        logger.error(f"Error: {e} for prompt: {prompt_summary}")
-        sanitized_prompt = sanitize_prompt(prompt, client)
-        generate_dalle_images(sanitized_prompt, prompt_summary)
-   
-    d2_revised_prompts = [data["revised_prompts"] for data in d2_res["data"] if data["revised_prompts"] is not None]
-    d2_request_ids = d2_res["_request_ids"]
-    logger.info(f"Request IDs: {d2_request_ids}")
-    logger.info(f"Revised Prompts: {d2_revised_prompts}") if d2_revised_prompts else None
-    for img in d2_res["data"]:
-        save_dalle_images(img["url"], prompt_summary)
+
+    except Exception as e:
+        logger.error(f"Error: {e} for prompt summary: {prompt_summary}")
+        if retry_count < max_retries:
+            sanitized_prompt = sanitize_prompt(prompt, client)
+            logger.info(f"Retrying with sanitized prompt (attempt {retry_count + 1}): {sanitized_prompt}")
+            return generate_dalle_images(sanitized_prompt, prompt_summary, retry_count + 1, max_retries)
+        else:
+            logger.error(f"Max retries reached for prompt: {prompt_summary}")
+            return
     
-    d3_revised_prompt = d3_res["data"][0]["revised_prompt"]
-    d3_request_id = d3_res["_request_id"]
-    logger.info(f"Request ID: {d3_request_id}")
-    logger.info(f"Revised Prompt: {d3_revised_prompt}") if d3_revised_prompt is not None else None
-    save_dalle_images(d3_res["data"], prompt_summary)
-
-
-def save_dalle_images(images, prompt_summary):
-    for i, img in enumerate(images):
-        time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-        img_url = img["url"]
-        img_content = requests.get(img_url).content
-        file_name = f"../images/Dall_e/{current_day}/{prompt_summary}_{time}_{i}.png"
-        with open(file_name, "wb") as f:
-            f.write(img_content)
+    finally:
+        save_dalle_images(d2_res, prompt_summary)
+        save_dalle_images(d3_res, prompt_summary)
+        logger.info(f"Finished generating images for prompt summary: {prompt_summary}")
 
 
 def save_hf_images(sd_images, prompt_summary, folder):

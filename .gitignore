@@ -3,3 +3,4 @@ images
 .env
 models\__pycache__/*
 models\__pycache__
+logs

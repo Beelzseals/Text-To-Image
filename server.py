@@ -1,13 +1,31 @@
-from typing import Union
 from fastapi import FastAPI
-from . import generator
+from generator import ImageGenerator
+import uvicorn
 
 app = FastAPI()
+generator = ImageGenerator()
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+@app.post("/generate/dalle")
+def generate_dalle_images(prompt: dict):
 
-@app.get("/generate/flux")
-def generate_flux(prompt: str, negative_prompt: str):
-    return {"prompt": prompt, "negative_prompt": negative_prompt}
+    generator.generate_dalle_images(prompt)
+    return {"status": "success"}
+
+@app.post("/generate/stable-diffusion")
+def generate_sd_images(prompt: dict):
+    generator.generate_hf_images("flux", prompt)
+    return {"status": "success"}
+
+@app.post("/generate/flux")
+def generate_flux_images(prompt: dict):
+    generator.generate_hf_images(prompt)
+    return {"status": "success"}
+
+@app.post("/generate/all")
+def generate_all_images():
+    generator.generate_all()
+    return {"status": "success"}
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, port=8000)

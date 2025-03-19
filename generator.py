@@ -84,14 +84,16 @@ class ImageGenerator:
 
 
     def generate_hf_images(self, model_type, positive_prompt, neg_prompt, prompt_summary):
-        folder = self.flux_folder if model_type == "flux" else self.sd_folder
+        folder = ""
 
         # load pipelines
         if model_type == "flux":
+            folder = self.flux_folder
             pipes_data = load_flux_model()
             positive_prompt = "MJ v6" + positive_prompt
             neg_prompt = "MJ v6" + neg_prompt
         elif model_type == "sd":
+            folder = self.sd_folder
             pipes_data = load_sd_model()
 
         # generate images

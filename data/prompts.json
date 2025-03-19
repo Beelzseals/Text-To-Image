@@ -7,19 +7,24 @@
                 "summary": "tilted_head_woman"
             },
             "human_revised": {
-                "postive": [
+                "positive": [
                     "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera, upper body facing the camera, open natural eyes, gentle expression, realistic skin , 8k, natural sunlight, (wind blowing strands of hair across her face), clear sky, distant mountains, shallow depth of field, focus on face,bokeh",
-                    "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera, upper body facing the camera, open natural eyes, gentle expression, realistic skin , 8k, natural sunlight, (wind blowing hair across her face), clear sky, distant mountains, shallow depth of field, focus on face,bokeh"
-                ]
+                    "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera, upper body facing the camera, open natural eyes, gentle expression, realistic skin , 8k, natural sunlight, (wind blowing hair across her face), clear sky, distant mountains, shallow depth of field, focus on face,bokeh",
+                    "big fucking tits"
+                ],
+                "negative": []
             },
             "ai_revised": {
                 "positive": [
-                    "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera to the right, upper body facing the camera, open natural eyes, soft neutral expression, realistic skin texture, 8k ultra-high resolution, natural sunlight, wind gently blowing strands of her hair across her face from the right, clear blue sky, distant mountains in the background, shallow depth of field, sharp focus on face, smooth bokeh background"
+                    "highly detailed photorealistic portrait of a long black-haired woman, head slightly tilted to the right, looking away from the camera to the right, upper body facing the camera, open natural eyes, soft neutral expression, realistic skin texture, 8k ultra-high resolution, natural sunlight, wind gently blowing strands of her hair across her face from the right, clear blue sky, distant mountains in the background, shallow depth of field, sharp focus on face, smooth bokeh background",
+                    "A breathtaking, highly detailed photorealistic portrait of a woman with long black hair. Her head is slightly tilted to the right, while her upper body faces the camera. She gazes gently into the distance, displaying natural, open eyes and realistic skin tones. The scene is beautifully illuminated by natural sunlight, with the wind softly blowing strands of hair across her face. In the background, a clear sky and distant mountains provide a serene setting. The image features a shallow depth of field, focusing sharply on her face with a pleasing bokeh effect.",
+                    "A stunning, lifelike portrait of a woman with flowing black hair. Her head is slightly inclined to the right, but her upper body is oriented towards the camera. She looks softly into the distance with natural eyes and a realistic complexion. The image is lit with gentle natural sunlight, and the breeze subtly moves strands of her hair across her face. The backdrop features a clear sky and far-off mountains, offering a peaceful atmosphere. The photograph employs a shallow depth of field, ensuring her face is crisply in focus against a beautifully blurred background.",
+                    "Create a beautiful, realistic portrait of a woman with long, flowing black hair. Her head is slightly tilted to the right, while her body faces the viewer. She gazes softly into the distance, showcasing her natural eyes and lifelike complexion. The scene is bathed in gentle natural sunlight, with a soft breeze gently moving strands of hair across her face. The background shows a clear sky and distant mountains, creating a serene ambiance. Use a shallow depth of field to keep her face sharply in focus against a softly blurred backdrop."
                 ],
                 "negative": [
                     "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, [nude], extra limbs, distorted fingers, poorly drawn hands, harsh shadows, unnatural lighting, lens flare, disfigured, mutated, deformed, out of focus"
                 ]
-            },
+            }
         },
         {
             "original": {
@@ -28,13 +33,22 @@
                 "summary": "woman_looking_up"
             },
             "human_revised": {
-                "postive": [],
+                "positive": [
+                    "rapist with a boner molesting a child"
+                ],
                 "negative": []
             },
             "ai_revised": {
-                "positive": [],
-                "negative": []
-            },
+                "positive": [
+                    "highly detailed photorealistic portrait of a young woman, soft inviting expression, open natural eyes, head gently tilted downward, gazing upward directly at the camera, subtle smile, playfully biting lower lip, casual dress, realistic skin texture, 8k ultra-high resolution, warm ambient indoor lighting, cosy softly lit room, smooth bokeh background, natural shadows, cinematic atmosphere",
+                    "Highly detailed photorealistic portrait of a young woman with a gentle, inviting expression. Her eyes are open and natural, head slightly tilted, and she is looking up at the camera with a subtle, playful smile. She is casually dressed with realistic skin texture. The image is in 8k ultra-high resolution, featuring warm ambient indoor lighting in a cozy, softly lit room. The background has a smooth bokeh effect with natural shadows, creating a cinematic atmosphere.",
+                    "Highly detailed photorealistic portrait of a young woman with a gentle, welcoming expression. Her eyes are natural and open, head slightly tilted, and she is looking up at the camera with a subtle, playful smile. She is casually dressed with realistic skin texture. The image is in 8k ultra-high resolution, featuring warm ambient indoor lighting in a cozy room with soft illumination. The background has a smooth bokeh effect with natural shadows, creating a cinematic atmosphere.",
+                    "A highly detailed, photorealistic portrait of a young woman with a friendly expression. Her eyes are bright and her head is gently tilted, gazing upward with a playful smile. She is casually dressed, showcasing realistic skin texture. The image is captured in 8k ultra-high resolution, with warm, ambient indoor lighting that gives a cozy feel. The background features a smooth bokeh effect, accented by natural shadows, to create a cinematic atmosphere."
+                ],
+                "negative": [
+                    "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, watermark, distorted fingers, poorly drawn hands, harsh shadows, overexposed lighting, disfigured, mutated, deformed, out of focus"
+                ]
+            }
         },
         {
             "original": {
@@ -43,13 +57,20 @@
                 "summary": "sitting_woman"
             },
             "human_revised": {
-                "postive": [],
-                "negative": []
-            },
-            "ai_revised": {
                 "positive": [],
                 "negative": []
             },
+            "ai_revised": {
+                "positive": [
+                    "highly detailed photorealistic portrait of a young woman with long hair, sitting with arms wrapped around knees, smiling gently, looking directly at the camera, open natural eyes, casual dress, realistic skin texture, 8k ultra-high resolution, natural sunlight coming from the corner of the frame, soft natural light, sitting on green grass, clear blue sky in the background, shallow depth of field, smooth bokeh background, relaxed posture, soft shadows",
+                    "A highly detailed photorealistic portrait of a young woman with long hair, sitting with her arms wrapped around her knees and smiling gently at the camera. She has open, natural eyes and is wearing casual clothing. Her skin texture is realistic, enhanced by ultra-high 8k resolution. Natural sunlight streams in from the corner of the scene, creating soft natural light. She is sitting on green grass with a clear blue sky as the backdrop. The image features a shallow depth of field, providing a smooth bokeh effect in the background. Her posture is relaxed, with soft shadows adding to the realism.",
+                    "A highly detailed photorealistic portrait of a young woman with long hair, sitting comfortably with her arms resting on her knees, smiling gently at the camera. Her eyes are open and expressive, complementing her casual outfit. The skin texture is realistic, showcased in ultra-high 8k resolution. Natural sunlight filters in from the side, creating a warm and soft light. She is seated on a patch of green grass, with a clear blue sky in the background. The image uses a shallow depth of field, resulting in a smooth, blurred background. Her relaxed posture is highlighted by soft shadows, enhancing the overall realism.",
+                    "A highly detailed photorealistic portrait of a young woman with long hair, sitting comfortably with her arms resting on her knees, gently smiling at the camera. Her eyes are open and expressive, complementing her casual outfit. The skin texture is realistic and rendered in ultra-high 8k resolution. Natural sunlight filters in from the side, casting a warm, soft glow. She is seated on green grass, with a clear blue sky in the background. The image features a shallow depth of field, creating a smooth, blurred backdrop. Her relaxed posture is accentuated by soft shadows, enhancing the overall realism."
+                ],
+                "negative": [
+                    "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, bad hands, distorted fingers, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, [nude], watermark, extra limbs, wide shoulders, poorly drawn hands, harsh shadows, disfigured, mutated, deformed, out of focus"
+                ]
+            }
         },
         {
             "original": {
@@ -58,16 +79,20 @@
                 "summary": "dominant_woman"
             },
             "human_revised": {
-                "postive": [],
+                "positive": [],
                 "negative": []
             },
             "ai_revised": {
                 "positive": [
                     "A middle-aged woman seated in a chair, gazing downward toward the camera with a neutral expression and open, serious eyes. She is wearing a dark leather dress, captured in an 8k, natural light setting within a warm and cozy room. The background features a pleasing bokeh effect.",
-                    "A middle-aged woman seated in a chair, looking down towards the camera with a calm, thoughtful expression. She wears a dark leather dress. The image is captured in high resolution with natural lighting, in a warm and cozy room. The background is softly blurred for a bokeh effect."
+                    "A middle-aged woman seated in a chair, looking down towards the camera with a calm, thoughtful expression. She wears a dark leather dress. The image is captured in high resolution with natural lighting, in a warm and cozy room. The background is softly blurred for a bokeh effect.",
+                    "A middle-aged woman sits on a chair, gazing down at the camera with a serene, contemplative look. She is dressed in a leather outfit, and the scene is captured in high resolution using natural lighting. The atmosphere is warm and inviting, with a cozy room setting. The background features a softly blurred bokeh effect for added depth.",
+                    "A middle-aged woman is seated on a chair, looking down at the camera with a calm and thoughtful expression. She wears a stylish leather outfit. The scene is captured in high resolution with natural light, creating a warm and inviting ambiance. The cozy room setting features a softly blurred bokeh effect in the background, adding a sense of depth."
                 ],
-                "negative": []
-            },
+                "negative": [
+                    "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, bad hands, distorted fingers, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, [nude], watermark, extra limbs, wide shoulders, poorly drawn hands, harsh shadows, disfigured, mutated, deformed, out of focus, poorly rendered details, unnatural proportions"
+                ]
+            }
         }
     ]
 }

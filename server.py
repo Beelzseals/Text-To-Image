@@ -20,7 +20,7 @@ app = FastAPI()
 
 setup_cors(app)
 
-def dynamic_ui(task, model=None):
+def update_ui_visibility(task, model=None):
     # Hide all elements initially
     gen_model_visible = inpaint_model_visible = False
     gen_positive_prompt_visible = gen_negative_prompt_visible = gen_prompt_summary_visible = False
@@ -54,35 +54,26 @@ def dynamic_ui(task, model=None):
 
 def create_gradio_app():
     with gr.Blocks() as demo:
-        task = gr.Radio(["Generation", "Inpainting"], label="Select Task")
-        gen_model = gr.Radio(["Stable Diffusion", "DALL-E"], label="Select Model", visible=False)
-        inpaint_model = gr.Radio(["Stable Diffusion", "DALL-E"], label="Select Model", visible=False)
+        with gr.Tab(label="Generation"):
+            gen_model = gr.Radio(["DALL-E", "Stable Diffusion"], label="Model")
+            gen_positive_prompt = gr.Textbox(lines=3, label="Positive Prompt")
+            gen_negative_prompt = gr.Textbox(lines=3, label="Negative Prompt", visible=(gen_model == "DALL-E"))
+            gen_prompt_summary = gr.Textbox(lines=1, label="Prompt Summary")
+            generate_button = gr.Button(value="Generate")
+            
+            gen_model.change(
+                lambda model: gr.update(visible=(model == "DALL-E")),
+                inputs=[gen_model],
+                outputs=[gen_negative_prompt],
+            )
+             
+        with gr.Tab(label="Inpainting"):
+            inpaint_model = gr.Radio(["DALL-E", "Stable Diffusion"], label="Model")
+            inp_image = gr.Image(label="Image", sources=["upload", "clipboard"])
+            inp_mask = gr.Image(label="Mask", sources=["upload", "clipboard"])
+            inp_prompt = gr.Textbox(lines=3, label="Prompt")
+            inpaint_button = gr.Button(value="Inpaint")
         
-        gen_positive_prompt = gr.Textbox(label="Positive Prompt", visible=False)
-        gen_negative_prompt = gr.Textbox(label="Negative Prompt", visible=False)
-        gen_prompt_summary = gr.Textbox(label="Prompt Summary", visible=False)
-        
-        inp_image = gr.Image(label="Source Image", visible=False, type="pil")
-        inp_mask = gr.Image(label="Mask Image", visible=False, type="pil")
-        inp_prompt = gr.Textbox(label="Inpainting Prompt", visible=False)
-        
-        generate_button = gr.Button("Generate", visible=False)
-        
-        task.change(dynamic_ui, inputs=[task], outputs=[
-            gen_model, inpaint_model, gen_positive_prompt, gen_negative_prompt, 
-            gen_prompt_summary, inp_image, inp_mask, inp_prompt, generate_button
-        ])
-        
-        gen_model.change(dynamic_ui, inputs=[task, gen_model], outputs=[
-            gen_model, inpaint_model, gen_positive_prompt, gen_negative_prompt, 
-            gen_prompt_summary, inp_image, inp_mask, inp_prompt, generate_button
-        ])
-        
-        inpaint_model.change(dynamic_ui, inputs=[task, inpaint_model], outputs=[
-            gen_model, inpaint_model, gen_positive_prompt, gen_negative_prompt, 
-            gen_prompt_summary, inp_image, inp_mask, inp_prompt, generate_button
-        ])
-
     return demo
     
 

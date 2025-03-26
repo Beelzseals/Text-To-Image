@@ -1,6 +1,6 @@
 .venv
 images
 .env
-models\__pycache__/*
-models\__pycache__
+__pycache__/
 logs
+.ruff_cache

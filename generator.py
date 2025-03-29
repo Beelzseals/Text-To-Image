@@ -5,7 +5,7 @@ import datetime
 import time
 
 from io import BytesIO
-from ml_models.used_models import load_sd_model, load_openai_client
+from ml_models.model_manager import ModelManager
 from utils.custom_log import create_logger
 from PIL import Image
 from openai import APITimeoutError, APIConnectionError, RateLimitError, BadRequestError, OpenAIError
@@ -13,19 +13,31 @@ from models.generation_model import ImageGenerationModel
 
 
 # TODO - OPTIMIZE FLUX MODEL TO WORK
+# TODO - ADD DEEPSEEK MODEL
 class ImageGenerator:
     def __init__(self):
+        model_manager = ModelManager()
+        self.task = "generation"
+
+        self.current_day = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.logger = create_logger()
+        # main folders
         self.flux_folder = "images/Flux"
         self.sd_folder = "images/Stable_diffusion"
         self.dalle_folder = "images/Dall_e"
-        self.current_day = datetime.datetime.now().strftime("%Y-%m-%d")
-        self.logger = create_logger()
         self._init_folders()
+
         prompts_path = "data/prompts.json"
         self.prompt_collection = json.load(open(prompts_path, "r"))
-        self.client = load_openai_client()
+
+        self.client = model_manager.load_openai_client()
+        self.sd_35_medium = model_manager.get_pipeline("generation", "stable_diffusion", "sd_35_medium")
+        self.sd_35_large = model_manager.get_pipeline("generation", "stable_diffusion", "sd_35_large")
+        self.flux_pipe = None  # Currently not used
 
     def _init_folders(self):
+        os.makedirs("images", exist_ok=True)
+        os.makedirs("images/generation", exist_ok=True)
         # main folders
         # os.makedirs(self.flux_folder, exist_ok=True)
         os.makedirs(self.sd_folder, exist_ok=True)
@@ -43,17 +55,30 @@ class ImageGenerator:
 
     def _generate_prompt_entry(self, positive_prompt, summary, negative_prompt=None):
         """Generates a new prompt entry in the prompt collection."""
+        # Generate new prompt json if it doesn't exist
         if not os.path.exists("data/prompts.json"):
             self.prompt_collection = {"prompts": []}
-        entry = {
-            "original": {"positive": positive_prompt, "negative": negative_prompt, "summary": summary},
-            "ai_revised": {"positive": [], "negative": []},
-            "human_revised": {"positive": [], "negative": []},
-        }
-        self.prompt_collection["prompts"].append(entry)
+        summaries = [prompt["original"]["summary"] for prompt in self.prompt_collection["prompts"]]
+        if summary not in summaries:
+            entry = {
+                "original": {"positive": positive_prompt, "negative": negative_prompt, "summary": summary},
+                "ai_revised": {"positive": [], "negative": []},
+                "human_revised": {"positive": [], "negative": []},
+            }
+            self.prompt_collection["prompts"].append(entry)
+        else:
+            entry = [
+                prompt for prompt in self.prompt_collection["prompts"] if prompt["original"]["summary"] == summary
+            ][0]
+            entry["original"]["positive"] = positive_prompt
+            entry["original"]["negative"] = negative_prompt
+            entry["original"]["summary"] = summary
+
+        # Save the updated prompt collection to the file
         with open("data/prompts.json", "w") as f:
             json.dump(self.prompt_collection, f, indent=4)
         self.logger.info(f"Prompt entry added for: {summary}")
+
         return entry
 
     def _moderate_prompt(self, raw_prompt):
@@ -78,23 +103,26 @@ class ImageGenerator:
             positive_prompt = "MJ v6" + positive_prompt
             neg_prompt = "MJ v6" + neg_prompt
         elif model_type == "sd":
-            folder = self.sd_folder
-            pipes_data = load_sd_model()
+            pipes_data = [
+                {"pipe": self.sd_35_medium, "folder": "sd_35_medium"},
+                {"pipe": self.sd_35_large, "folder": "sd_35_large"},
+            ]
 
         # generate images
         for pipe_data in pipes_data:
             pipe = pipe_data["pipe"]
-            model_folder = pipe_data["folder"]
+            folder = os.path.join(self.sd_folder, self.current_day, pipe_data["folder"])
+            self.logger.info(f"Generating images with {pipe_data['folder']} pipeline")
             images = pipe(
                 prompt=positive_prompt,
                 negative_prompt=neg_prompt,
-                num_inference_steps=40,
-                guidance_scale=7.5,
                 num_images_per_prompt=3,
+                guidance_scale=7.5,
+                num_inference_steps=40,
             ).images
 
             for i, img in enumerate(images):
-                self._save_hf_images(img, i, prompt_summary, folder, model_folder)
+                self._save_hf_images(img, i, prompt_summary, folder, pipe_data["folder"])
 
     def _sanitize_prompt(self, raw_prompt, flagged_categories=None):
         system_prompt = (
@@ -142,7 +170,9 @@ class ImageGenerator:
             n=1,
         )
 
-    def _handle_retryable_error(self, error, prompt, image_generation_prompt, prompt_summary, retry_count, max_retries):
+    def _handle_retryable_error(
+        self, error, prompt_entry, image_generation_prompt, prompt_summary, retry_count, max_retries
+    ):
         self.logger.error(f"Retryable error: {error} for prompt summary: {prompt_summary}")
 
         if retry_count >= max_retries:
@@ -154,17 +184,17 @@ class ImageGenerator:
             time.sleep(60)
 
         sanitized_prompt = self._sanitize_prompt(image_generation_prompt)
-        prompt["ai_revised"]["positive"].append(sanitized_prompt)
+        prompt_entry["ai_revised"]["positive"].append(sanitized_prompt)
         self.logger.info(f"Retrying with sanitized prompt (attempt {retry_count + 1}): {sanitized_prompt}")
 
-        self._generate_dalle_images(prompt, sanitized_prompt, prompt_summary, retry_count + 1, max_retries)
+        self._generate_dalle_images(prompt_entry, sanitized_prompt, prompt_summary, retry_count + 1, max_retries)
 
     def _log_and_exit(self, error, prompt_summary):
         self.logger.error(f"Non-retryable error: {error} for prompt summary: {prompt_summary}")
         return
 
-    def _generate_dalle_images(self, prompt, image_generation_prompt, prompt_summary, retry_count=0, max_retries=3):
-        moderated_prompt = self._handle_prompt_moderation(image_generation_prompt)
+    def _generate_dalle_images(self, prompt_entry, positive_prompt, prompt_summary, retry_count=0, max_retries=3):
+        moderated_prompt = self._handle_prompt_moderation(positive_prompt)
         print(moderated_prompt)
         try:
             d2_res = self._generate_dalle2_images(moderated_prompt)
@@ -174,7 +204,7 @@ class ImageGenerator:
             self.logger.info(f"Finished generating images for prompt summary: {prompt_summary}")
 
         except (APITimeoutError, RateLimitError, OpenAIError) as e:
-            self._handle_retryable_error(e, prompt, image_generation_prompt, prompt_summary, retry_count, max_retries)
+            self._handle_retryable_error(e, prompt_entry, positive_prompt, prompt_summary, retry_count, max_retries)
 
         except (APIConnectionError, PermissionError, BadRequestError) as e:
             self._log_and_exit(e, prompt_summary)
@@ -210,12 +240,12 @@ class ImageGenerator:
 
     def generate_existing_prompts(self):
         """Generates images for all prompts in the prompt collection, with all available models."""
-        for prompt in self.prompt_collection["prompts"]:
-            positive_prompt, negative_prompt, prompt_summary = self._retrieve_latest_prompts(prompt)
+        for prompt_entry in self.prompt_collection["prompts"]:
+            positive_prompt, negative_prompt, prompt_summary = self._retrieve_latest_prompts(prompt_entry)
             self.logger.info(f"Generating images for {prompt_summary}")
-            self._generate_hf_images("sd", prompt, positive_prompt, negative_prompt, prompt_summary)
+            self._generate_hf_images("sd", prompt_entry, positive_prompt, negative_prompt, prompt_summary)
             # self.generate_hf_images("flux", prompt, positive_prompt, negative_prompt, prompt_summary)
-            self._generate_dalle_images(prompt, positive_prompt, prompt_summary)
+            self._generate_dalle_images(prompt_entry, positive_prompt, prompt_summary)
 
             # Save back modified prompts
             with open("data/prompts.json", "w") as f:
@@ -225,14 +255,14 @@ class ImageGenerator:
         """Generates a single image for the given prompt using the specified model."""
         model = prompt_data.model
         positive_prompt = prompt_data.positive_prompt
+        negative_prompt = prompt_data.negative_prompt
         prompt_summary = prompt_data.prompt_summary
-        self._generate_prompt_entry(positive_prompt, prompt_summary)
+        prompt_entry = self._generate_prompt_entry(positive_prompt, prompt_summary, negative_prompt)
 
         if model == "DALL-E":
-            self._generate_dalle_images(prompt_data, positive_prompt, prompt_summary)
+            self._generate_dalle_images(prompt_entry, positive_prompt, prompt_summary)
         elif model == "Stable Diffusion":
-            negative_prompt = prompt_data.negative_prompt
-            self._generate_hf_images("sd", prompt_data, positive_prompt, negative_prompt, prompt_summary)
+            self._generate_hf_images("sd", positive_prompt, negative_prompt, prompt_summary)
         elif model == "Flux":
             # self.generate_hf_images("flux", prompt_data, positive_prompt, negative_prompt, prompt_summary)
             pass
@@ -244,18 +274,19 @@ class ImageGenerator:
         positive_prompt = prompt_data.positive_prompt
         negative_prompt = prompt_data.negative_prompt
         prompt_summary = prompt_data.prompt_summary
-        self._generate_prompt_entry(positive_prompt, prompt_summary, negative_prompt)
+        prompt_entry = self._generate_prompt_entry(positive_prompt, prompt_summary, negative_prompt)
 
         self.logger.info(f"Generating images for {prompt_summary}")
-        self._generate_hf_images("sd", prompt_data, positive_prompt, negative_prompt, prompt_summary)
-        # self.generate_hf_images("flux", prompt_data, positive_prompt, negative_prompt, prompt_summary)
-        self._generate_dalle_images(prompt_data, positive_prompt, prompt_summary)
+        self._generate_hf_images("sd", positive_prompt, negative_prompt, prompt_summary)
+        # self.generate_hf_images("flux", positive_prompt, negative_prompt, prompt_summary)
+        self._generate_dalle_images(prompt_entry, positive_prompt, prompt_summary)
         self.logger.info(f"Finished generating images for {prompt_summary}")
         # Save back modified prompts
         with open("data/prompts.json", "w") as f:
             json.dump(self.prompt_collection, f, indent=4)
 
-
-# if __name__ == "__main__":
-#     generator = ImageGenerator()
-#     generator.generate_all()
+    def get_generation_pipelines(self, model_manager: ModelManager):
+        """Loads the generation pipelines."""
+        self.sd_35_medium = model_manager.get_pipeline("generation", "stable_diffusion", "sd_35_medium")
+        self.sd_35_large = model_manager.get_pipeline("generation", "stable_diffusion", "sd_35_large")
+        # self.flux_pipe = model_manager.get_pipeline("generation", "flux", "flux")

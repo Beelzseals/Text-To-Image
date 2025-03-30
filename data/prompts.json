@@ -90,6 +90,36 @@
                     "blurry face, asymmetry, cross-eyed, closed eyes, bad anatomy, bad hands, distorted fingers, unrealistic skin, plastic texture, low resolution, noise, jpeg artifacts, [nude], watermark, extra limbs, wide shoulders, poorly drawn hands, harsh shadows, disfigured, mutated, deformed, out of focus, poorly rendered details, unnatural proportions"
                 ]
             }
+        },
+        {
+            "original": {
+                "positive": "A fierce warrior woman stands atop a misty mountain, silver hair flowing in the wind. She wears glowing rune-adorned armor and a crimson cape. In her hand, a shimmering magical sword radiates power. The sunset casts golden hues over distant peaks, creating a cinematic, epic atmosphere filled with mysticism and strength.",
+                "negative": "Blurry, low-quality, pixelated, distorted anatomy, extra limbs, unnatural proportions, overly saturated, dull lighting, lack of detail, messy composition, text artifacts, watermarks, uncanny valley effect.",
+                "summary": "fierce_woman"
+            },
+            "ai_revised": {
+                "positive": [],
+                "negative": []
+            },
+            "human_revised": {
+                "positive": [],
+                "negative": []
+            }
+        },
+        {
+            "original": {
+                "positive": "A fierce warrior woman stands atop a misty mountain, silver hair flowing in the wind. She wears glowing rune-adorned armor and a crimson cape. In her hand, a shimmering magical sword radiates power. The sunset casts golden hues over distant peaks, creating a cinematic, epic atmosphere filled with mysticism and strength.",
+                "negative": "",
+                "summary": "fierce_woman_2"
+            },
+            "ai_revised": {
+                "positive": [],
+                "negative": []
+            },
+            "human_revised": {
+                "positive": [],
+                "negative": []
+            }
         }
     ]
 }

@@ -1,13 +1,15 @@
 from fastapi import FastAPI
-import uvicorn
 import gradio as gr
-from utils.custom_logger import create_logger
-from utils.validation import handle_generation_errors
-from utils.validation import handle_inpainting_errors
-from inpainter import Inpainter
-from generator import ImageGenerator
+import uvicorn
+
+
 from utils.cors_config import setup_cors
 from ml_models.model_manager import ModelManager
+from utils.custom_logger import create_logger
+from generator import ImageGenerator
+from inpainter import Inpainter
+from utils.validation import handle_generation_errors
+from utils.validation import handle_inpainting_errors
 
 
 # ============================== INITIALIZATION ==============================

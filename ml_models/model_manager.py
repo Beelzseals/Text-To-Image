@@ -1,21 +1,24 @@
 import os
-import torch
 import asyncio
+
 from dotenv import load_dotenv
 from huggingface_hub import login
+import torch
+from openai import OpenAI
+
 from diffusers import (
     BitsAndBytesConfig,
     SD3Transformer2DModel,
     StableDiffusion3Pipeline,
     StableDiffusionInpaintPipeline,
 )
-from openai import OpenAI
 
 
 class ModelManager:
     _instance = None
     _initialized = False
 
+    # =============================== MAGIC METHODS ===============================
     def __init__(self):
         if not self._initialized:
             load_dotenv()
@@ -47,12 +50,7 @@ class ModelManager:
             cls._instance = super(ModelManager, cls).__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def load_openai_client(self):
-        """Returns a singleton OpenAI client."""
-        if self._openai_client is None:
-            self._openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        return self._openai_client
-
+    # =============================== PRIVATE METHODS ===============================
     async def _setup_sd_pipeline(self, model_path, folder):
         """Loads a Stable Diffusion pipeline asynchronously."""
         nf4_config = BitsAndBytesConfig(
@@ -96,6 +94,13 @@ class ModelManager:
         pipe.to(self.device)
         pipe.enable_attention_slicing()
         return {"pipe": pipe, "folder": "sd_2_inpainting"}
+
+    # =============================== PUBLIC METHODS ===============================
+    def load_openai_client(self):
+        """Returns a singleton OpenAI client."""
+        if self._openai_client is None:
+            self._openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        return self._openai_client
 
     async def load_all_pipelines(self):
         """Loads all pipelines asynchronously and caches them for reuse."""

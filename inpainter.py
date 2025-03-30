@@ -2,9 +2,11 @@ import io
 import os
 import datetime
 import base64
+
 from ml_models.model_manager import ModelManager
-from PIL import Image
 from models.inpaint_model import InpaintModel
+
+from PIL import Image
 
 
 class Inpainter:
@@ -15,6 +17,8 @@ class Inpainter:
         self._init_folders()
         self.sd_pipe = model_manager.get_pipeline("inpainting", "stable_diffusion", "sd_2_inpainting")
         self.openai_client = model_manager.load_openai_client()
+
+    # ============================================== PRIVATE METHODS ==================================================
 
     def _init_folders(self):
         inpaint_path = "images/inpaint"
@@ -32,7 +36,7 @@ class Inpainter:
         image = image.resize((512, 512))
         mask = mask.resize((512, 512))
         output = self.sd_pipe(prompt=prompt, image=image, mask_image=mask).images[0]
-        self.save_inpainted_image(output, "stable_diffusion_2")
+        self._save_inpainted_image(output, "stable_diffusion_2")
 
     def _inpaint_with_dalle(self, image: Image.Image, mask: Image.Image, prompt: str = "") -> Image.Image:
         image = image.convert("RGB")
@@ -52,14 +56,16 @@ class Inpainter:
         )
         result_b64 = response["data"][0]["b64_json"]
         res_img = Image.frombytes("RGB", (512, 512), base64.b64decode(result_b64))
-        self.save_inpainted_image(res_img, "dalle_2")
+        self._save_inpainted_image(res_img, "dalle_2")
 
-    def save_inpainted_image(self, image: Image.Image, model: str):
+    def _save_inpainted_image(self, image: Image.Image, model: str):
         model_path = os.path.join("images", "inpaint", self.current_day, model)
         os.makedirs(model_path, exist_ok=True)
         image_path = os.path.join(model_path, f"{model}_{self.current_day}.png")
         image.save(image_path)
         return image_path
+
+    # ================================================== PUBLIC METHODS ==================================================
 
     def inpaint_with_all_models(self, inpaint_inputs: InpaintModel):
         image = self._np_to_image(inpaint_inputs.image)

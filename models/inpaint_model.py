@@ -1,5 +1,6 @@
-import numpy as np
 from pydantic import BaseModel, Field, field_validator
+import numpy as np
+
 from typing import Literal
 
 

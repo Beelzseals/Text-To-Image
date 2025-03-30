@@ -3,15 +3,16 @@ import base64
 import json
 import datetime
 import time
-
 from io import BytesIO
+
 from ml_models.model_manager import ModelManager
-from PIL import Image
-from openai import APITimeoutError, APIConnectionError, RateLimitError, BadRequestError, OpenAIError
 from models.generation_model import ImageGenerationModel
 
+from PIL import Image
+from openai import APITimeoutError, APIConnectionError, RateLimitError, BadRequestError, OpenAIError
 
-# TODO - OPTIMIZE FLUX MODEL TO WORK
+
+# TODO - ADD FLUX MODEL
 # TODO - ADD DEEPSEEK MODEL
 class ImageGenerator:
     def __init__(self, logger):
@@ -53,6 +54,34 @@ class ImageGenerator:
         os.makedirs(os.path.join(self.gen_main_path, self.sd_folder, self.current_day, "sd_35_medium"), exist_ok=True)
         os.makedirs(os.path.join(self.gen_main_path, self.sd_folder, self.current_day, "sd_35_large"), exist_ok=True)
 
+    # =========================================== ERROR HANDLING  ============================================
+
+    def _handle_retryable_error(
+        self, error, prompt_entry, image_generation_prompt, prompt_summary, retry_count, max_retries
+    ):
+        """Handles retryable errors during DALL-E image generation."""
+        self.logger.error(f"Retryable error: {error} for prompt summary: {prompt_summary}")
+
+        if retry_count >= max_retries:
+            self.logger.error(f"Max retries reached for prompt: {prompt_summary}")
+            return
+
+        if isinstance(error, RateLimitError):
+            self.logger.info("Rate limit error, waiting for 60 seconds")
+            time.sleep(60)
+
+        sanitized_prompt = self._sanitize_prompt(image_generation_prompt)
+        prompt_entry["ai_revised"]["positive"].append(sanitized_prompt)
+        self.logger.info(f"Retrying with sanitized prompt (attempt {retry_count + 1}): {sanitized_prompt}")
+
+        self._generate_dalle_images(prompt_entry, sanitized_prompt, prompt_summary, retry_count + 1, max_retries)
+
+    def _log_and_exit(self, error, prompt_summary):
+        """Logs non-retryable errors and exits the program."""
+        self.logger.error(f"Non-retryable error: {error} for prompt summary: {prompt_summary}")
+        return
+
+    # =========================================== PROMPT HANDLING METHODS ====================================
     def _generate_prompt_entry(self, positive_prompt, summary, negative_prompt=None):
         """Generates a new prompt entry in the prompt collection."""
         # Generate new prompt json if it doesn't exist
@@ -82,6 +111,7 @@ class ImageGenerator:
         return entry
 
     def _moderate_prompt(self, raw_prompt):
+        """Moderates the prompt using OpenAI's moderation API."""
         return self.client.moderations.create(model="text-moderation-stable", input=raw_prompt)
 
     def _handle_prompt_moderation(self, prompt):
@@ -93,19 +123,36 @@ class ImageGenerator:
         self.logger.info(f"Prompt was flagged for categories: {flagged_categories}")
         return self._sanitize_prompt(prompt, flagged_categories)
 
-    def _generate_hf_images(self, model_type, positive_prompt, neg_prompt, prompt_summary):
+    def _sanitize_prompt(self, raw_prompt, flagged_categories=None):
+        """ ""Sanitizes the prompt using OpenAI's chat completion API."""
+        system_prompt = (
+            "You are an expert at rewriting image generation prompts so they do not violate any content policies, while preserving the intended visual meaning and detail. Avoid sensitive, explicit, or potentially risky wording. Simplify where needed, but keep the main elements clear."
+            if flagged_categories is None
+            else f"Your prompt was flagged for the following categories: {flagged_categories}. Please rewrite it in a way that avoids these categories. Simplify where needed, but keep the main elements clear."
+        )
+
+        sanitized_prompt_result = self.client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": raw_prompt}],
+        )
+        return sanitized_prompt_result.choices[0].message.content
+
+    def _refine_prompt_for_retry(self, prompt, retry_count, max_retries, image_generation_prompt):
+        if retry_count < max_retries:
+            sanitized_prompt = self._sanitize_prompt(image_generation_prompt)
+            prompt["ai_revised"]["positive"].append(sanitized_prompt)
+            self.logger.info(f"Retrying with sanitized prompt (attempt {retry_count + 1}): {sanitized_prompt}")
+            return sanitized_prompt
+
+    # =========================================== HUGGING FACE ====================================
+
+    def _generate_hf_images(self, positive_prompt, neg_prompt, prompt_summary):
         """Generates images using Hugging Face pipelines."""
         # load pipelines
-        if model_type == "flux":
-            # folder = self.flux_folder
-            # pipes_data = load_flux_model()
-            positive_prompt = "MJ v6" + positive_prompt
-            neg_prompt = "MJ v6" + neg_prompt
-        elif model_type == "sd":
-            pipes_data = [
-                {"pipe": self.sd_35_medium, "folder": "sd_35_medium"},
-                {"pipe": self.sd_35_large, "folder": "sd_35_large"},
-            ]
+        pipes_data = [
+            {"pipe": self.sd_35_medium, "folder": "sd_35_medium"},
+            {"pipe": self.sd_35_large, "folder": "sd_35_large"},
+        ]
 
         # generate images
         for pipe_data in pipes_data:
@@ -123,36 +170,14 @@ class ImageGenerator:
             for i, img in enumerate(images):
                 self._save_hf_images(img, i, prompt_summary, out_path)
 
-    def _sanitize_prompt(self, raw_prompt, flagged_categories=None):
-        system_prompt = (
-            "You are an expert at rewriting image generation prompts so they do not violate any content policies, while preserving the intended visual meaning and detail. Avoid sensitive, explicit, or potentially risky wording. Simplify where needed, but keep the main elements clear."
-            if flagged_categories is None
-            else f"Your prompt was flagged for the following categories: {flagged_categories}. Please rewrite it in a way that avoids these categories. Simplify where needed, but keep the main elements clear."
-        )
+    def _save_hf_images(self, img, i, prompt_summary, out_path):
+        """Saves the generated images to the specified path."""
+        time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+        img_path = f"{out_path}/{prompt_summary}_{time}_{i}.png"
+        self.logger.info(f"Saving image: {img_path}")
+        img.save(img_path)
 
-        sanitized_prompt_result = self.client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": raw_prompt}],
-        )
-        return sanitized_prompt_result.choices[0].message.content
-
-    def _save_dalle_images(self, res, prompt_summary, model_folder):
-        for i, img_data in enumerate(res.data):
-            b64_img = img_data.b64_json
-            decoded_img_data = base64.b64decode(b64_img)
-            img = Image.open(BytesIO(decoded_img_data))
-            time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-            file_name = f"{self.gen_main_path}/{self.dalle_folder}/{self.current_day}/{model_folder}/{prompt_summary}_{time}_{i}.png"
-            img.save(file_name)
-            self.logger.info(f"Saved image: {file_name}")
-
-    def _refine_prompt_for_retry(self, prompt, retry_count, max_retries, image_generation_prompt):
-        if retry_count < max_retries:
-            sanitized_prompt = self._sanitize_prompt(image_generation_prompt)
-            prompt["ai_revised"]["positive"].append(sanitized_prompt)
-            self.logger.info(f"Retrying with sanitized prompt (attempt {retry_count + 1}): {sanitized_prompt}")
-            return sanitized_prompt
-
+    # =========================================== DALL-E 2 & 3 ==============================
     def _generate_dalle2_images(self, prompt):
         return self.client.images.generate(
             model="dall-e-2", prompt=prompt, size="1024x1024", quality="hd", response_format="b64_json", n=3
@@ -169,28 +194,16 @@ class ImageGenerator:
             n=1,
         )
 
-    def _handle_retryable_error(
-        self, error, prompt_entry, image_generation_prompt, prompt_summary, retry_count, max_retries
-    ):
-        self.logger.error(f"Retryable error: {error} for prompt summary: {prompt_summary}")
-
-        if retry_count >= max_retries:
-            self.logger.error(f"Max retries reached for prompt: {prompt_summary}")
-            return
-
-        if isinstance(error, RateLimitError):
-            self.logger.info("Rate limit error, waiting for 60 seconds")
-            time.sleep(60)
-
-        sanitized_prompt = self._sanitize_prompt(image_generation_prompt)
-        prompt_entry["ai_revised"]["positive"].append(sanitized_prompt)
-        self.logger.info(f"Retrying with sanitized prompt (attempt {retry_count + 1}): {sanitized_prompt}")
-
-        self._generate_dalle_images(prompt_entry, sanitized_prompt, prompt_summary, retry_count + 1, max_retries)
-
-    def _log_and_exit(self, error, prompt_summary):
-        self.logger.error(f"Non-retryable error: {error} for prompt summary: {prompt_summary}")
-        return
+    def _save_dalle_images(self, res, prompt_summary, model_folder):
+        """ ""Saves the generated DALL-E images to the specified path."""
+        for i, img_data in enumerate(res.data):
+            b64_img = img_data.b64_json
+            decoded_img_data = base64.b64decode(b64_img)
+            img = Image.open(BytesIO(decoded_img_data))
+            time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+            file_name = f"{self.gen_main_path}/{self.dalle_folder}/{self.current_day}/{model_folder}/{prompt_summary}_{time}_{i}.png"
+            img.save(file_name)
+            self.logger.info(f"Saved image: {file_name}")
 
     def _generate_dalle_images(self, prompt_entry, positive_prompt, prompt_summary, retry_count=0, max_retries=3):
         moderated_prompt = self._handle_prompt_moderation(positive_prompt)
@@ -208,13 +221,8 @@ class ImageGenerator:
         except (APIConnectionError, PermissionError, BadRequestError) as e:
             self._log_and_exit(e, prompt_summary)
 
-    def _save_hf_images(self, img, i, prompt_summary, out_path):
-        time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-        img_path = f"{out_path}/{prompt_summary}_{time}_{i}.png"
-        self.logger.info(f"Saving image: {img_path}")
-        img.save(img_path)
-
     def _retrieve_latest_prompts(self, prompt):
+        """ ""Retrieves the latest positive and negative prompts from the prompt collection."""
         positive_prompt = ""
         negative_prompt = ""
         prompt_summary = prompt["original"]["summary"]
@@ -237,15 +245,14 @@ class ImageGenerator:
 
         return positive_prompt, negative_prompt, prompt_summary
 
-    # ======================== GENERATION ========================
+    # ============================================== PUBLIC METHODS =================================
 
     def generate_existing_prompts(self):
         """Generates images for all prompts in the prompt collection, with all available models."""
         for prompt_entry in self.prompt_collection["prompts"]:
             positive_prompt, negative_prompt, prompt_summary = self._retrieve_latest_prompts(prompt_entry)
             self.logger.info(f"Generating images for {prompt_summary}")
-            self._generate_hf_images("sd", prompt_entry, positive_prompt, negative_prompt, prompt_summary)
-            # self.generate_hf_images("flux", prompt, positive_prompt, negative_prompt, prompt_summary)
+            self._generate_hf_images(prompt_entry, positive_prompt, negative_prompt, prompt_summary)
             self._generate_dalle_images(prompt_entry, positive_prompt, prompt_summary)
 
             # Save back modified prompts
@@ -263,7 +270,7 @@ class ImageGenerator:
         if model == "DALL-E":
             self._generate_dalle_images(prompt_entry, positive_prompt, prompt_summary)
         elif model == "Stable Diffusion":
-            self._generate_hf_images("sd", positive_prompt, negative_prompt, prompt_summary)
+            self._generate_hf_images(positive_prompt, negative_prompt, prompt_summary)
         elif model == "Flux":
             # self.generate_hf_images("flux", prompt_data, positive_prompt, negative_prompt, prompt_summary)
             pass
@@ -278,7 +285,7 @@ class ImageGenerator:
         prompt_entry = self._generate_prompt_entry(positive_prompt, prompt_summary, negative_prompt)
 
         self.logger.info(f"Generating images for {prompt_summary}")
-        self._generate_hf_images("sd", positive_prompt, negative_prompt, prompt_summary)
+        self._generate_hf_images(positive_prompt, negative_prompt, prompt_summary)
         # self.generate_hf_images("flux", positive_prompt, negative_prompt, prompt_summary)
         self._generate_dalle_images(prompt_entry, positive_prompt, prompt_summary)
         self.logger.info(f"Finished generating images for {prompt_summary}")

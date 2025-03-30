@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
 import gradio as gr
-
-# import asyncio
+from utils.custom_logger import create_logger
 from utils.validation import handle_generation_errors
 from utils.validation import handle_inpainting_errors
 from inpainter import Inpainter
@@ -19,10 +18,12 @@ setup_cors(app)
 
 @app.on_event("startup")
 async def startup_event():
+    # Initialize logger
+    logger = create_logger()
     app.state.model_manager = ModelManager()
     await app.state.model_manager.load_all_pipelines()
-    app.state.generator = ImageGenerator()
-    app.state.inpainter = Inpainter()
+    app.state.generator = ImageGenerator(logger)
+    app.state.inpainter = Inpainter(logger)
 
 
 ######################### EVENT HANDLERS ###########################
@@ -129,8 +130,9 @@ def create_gradio_app():
 
         with gr.Tab(label="Inpainting"):
             inpaint_model = gr.Radio(["DALL-E", "Stable Diffusion", "All"], label="Model")
-            inp_image = gr.Image(label="Image", sources=["upload", "clipboard"])
-            inp_mask = gr.Image(label="Mask", sources=["upload", "clipboard"])
+            inp_image = gr.Image(label="Image", sources=["upload", "clipboard"], type="pil")
+            inp_mask = gr.Image(label="Mask", sources=["upload", "clipboard"], type="pil")
+            gr.ImageMask(label="Mask", type="pil", visible=(inpaint_model == "DALL-E"))
             inp_prompt = gr.Textbox(lines=3, label="Prompt")
 
             inpaint_button = gr.Button(value="Inpaint")

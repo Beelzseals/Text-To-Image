@@ -1,12 +1,13 @@
 from fastapi.middleware.cors import CORSMiddleware
 
+
 def setup_cors(app):
     app.add_middleware(
         CORSMiddleware,
         allow_origins=[
-            "http://localhost:8000",  # For local development (React/Vue/Next/etc.)
+            "http://localhost:8000",
         ],
-        allow_credentials=True,  # Allow cookies, Authorization headers
-        allow_methods=["GET", "POST"],  # Limit methods to what you use
-        allow_headers=["Authorization", "Content-Type"],  # Limit to necessary headers
+        allow_credentials=True,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Authorization", "Content-Type"],
     )

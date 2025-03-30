@@ -152,28 +152,28 @@ def create_gradio_app():
 
 # ============================== ROUTES ==================================
 @app.post("/api/generate/single")
-def generate_single_image():
+def generate_single_image(model: str, positive_prompt: str, prompt_summary: str, negative_prompt: str = None):
+    generation_inputs = handle_generation_errors(model, positive_prompt, negative_prompt, prompt_summary)
+    if type(generation_inputs) is str:
+        return {"status": "error", "message": generation_inputs}
+
+    app.state.generator.generate_with_one_model(generation_inputs)
     return {"status": "success"}
 
 
 @app.post("/api/generate/all")
-def generate_all_images():
+def generate_all_images(model: str, positive_prompt: str, prompt_summary: str, negative_prompt: str = None):
+    generation_inputs = handle_generation_errors(model, positive_prompt, negative_prompt, prompt_summary)
+    if type(generation_inputs) is str:
+        return {"status": "error", "message": generation_inputs}
+
+    app.state.generator.generate_with_all_models(generation_inputs)
     return {"status": "success"}
 
 
 @app.post("/api/generate/existing-prompts")
 def generate_existing_prompts():
     app.state.generator.generate_existing_prompts()
-    return {"status": "success"}
-
-
-@app.post("/api/inpaint/single")
-def inpaint_image():
-    return {"status": "success"}
-
-
-@app.post("/api/inpaint/all")
-def inpaint_all_images():
     return {"status": "success"}
 
 

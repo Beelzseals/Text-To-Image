@@ -6,7 +6,6 @@ import time
 
 from io import BytesIO
 from ml_models.model_manager import ModelManager
-from utils.custom_log import create_logger
 from PIL import Image
 from openai import APITimeoutError, APIConnectionError, RateLimitError, BadRequestError, OpenAIError
 from models.generation_model import ImageGenerationModel
@@ -15,16 +14,18 @@ from models.generation_model import ImageGenerationModel
 # TODO - OPTIMIZE FLUX MODEL TO WORK
 # TODO - ADD DEEPSEEK MODEL
 class ImageGenerator:
-    def __init__(self):
+    def __init__(self, logger):
         model_manager = ModelManager()
         self.task = "generation"
 
         self.current_day = datetime.datetime.now().strftime("%Y-%m-%d")
-        self.logger = create_logger()
+        self.logger = logger
+        self.gen_main_path = "images/generation"
+        self.flux_folder = "flux"
+        self.sd_folder = "stable_diffusion"
+        self.dalle_folder = "dall_e"
         # main folders
-        self.flux_folder = "images/Flux"
-        self.sd_folder = "images/Stable_diffusion"
-        self.dalle_folder = "images/Dall_e"
+
         self._init_folders()
 
         prompts_path = "data/prompts.json"
@@ -36,22 +37,21 @@ class ImageGenerator:
         self.flux_pipe = None  # Currently not used
 
     def _init_folders(self):
+        """Initializes the folder structure for image generation."""
+
         os.makedirs("images", exist_ok=True)
-        os.makedirs("images/generation", exist_ok=True)
-        # main folders
-        # os.makedirs(self.flux_folder, exist_ok=True)
-        os.makedirs(self.sd_folder, exist_ok=True)
-        os.makedirs(self.dalle_folder, exist_ok=True)
+        os.makedirs(self.gen_main_path, exist_ok=True)
+
+        os.makedirs(os.path.join(self.gen_main_path, self.sd_folder), exist_ok=True)
         # daily subfolders
-        # os.makedirs(os.path.join(self.flux_folder, self.current_day), exist_ok=True)
-        os.makedirs(os.path.join(self.sd_folder, self.current_day), exist_ok=True)
-        os.makedirs(os.path.join(self.dalle_folder, self.current_day), exist_ok=True)
+        os.makedirs(os.path.join(self.gen_main_path, self.sd_folder, self.current_day), exist_ok=True)
+        os.makedirs(os.path.join(self.gen_main_path, self.dalle_folder, self.current_day), exist_ok=True)
         # subfolders for dall-e 2 and 3
-        os.makedirs(os.path.join(self.dalle_folder, self.current_day, "dalle_2"), exist_ok=True)
-        os.makedirs(os.path.join(self.dalle_folder, self.current_day, "dalle_3"), exist_ok=True)
+        os.makedirs(os.path.join(self.gen_main_path, self.dalle_folder, self.current_day, "dalle_2"), exist_ok=True)
+        os.makedirs(os.path.join(self.gen_main_path, self.dalle_folder, self.current_day, "dalle_3"), exist_ok=True)
         # subfolders for stable diffusion
-        os.makedirs(os.path.join(self.sd_folder, self.current_day, "sd_35_medium"), exist_ok=True)
-        os.makedirs(os.path.join(self.sd_folder, self.current_day, "sd_35_large"), exist_ok=True)
+        os.makedirs(os.path.join(self.gen_main_path, self.sd_folder, self.current_day, "sd_35_medium"), exist_ok=True)
+        os.makedirs(os.path.join(self.gen_main_path, self.sd_folder, self.current_day, "sd_35_large"), exist_ok=True)
 
     def _generate_prompt_entry(self, positive_prompt, summary, negative_prompt=None):
         """Generates a new prompt entry in the prompt collection."""
@@ -94,11 +94,10 @@ class ImageGenerator:
         return self._sanitize_prompt(prompt, flagged_categories)
 
     def _generate_hf_images(self, model_type, positive_prompt, neg_prompt, prompt_summary):
-        folder = ""
-
+        """Generates images using Hugging Face pipelines."""
         # load pipelines
         if model_type == "flux":
-            folder = self.flux_folder
+            # folder = self.flux_folder
             # pipes_data = load_flux_model()
             positive_prompt = "MJ v6" + positive_prompt
             neg_prompt = "MJ v6" + neg_prompt
@@ -111,18 +110,18 @@ class ImageGenerator:
         # generate images
         for pipe_data in pipes_data:
             pipe = pipe_data["pipe"]
-            folder = os.path.join(self.sd_folder, self.current_day, pipe_data["folder"])
+            out_path = os.path.join(self.gen_main_path, self.sd_folder, self.current_day, pipe_data["folder"])
             self.logger.info(f"Generating images with {pipe_data['folder']} pipeline")
             images = pipe(
                 prompt=positive_prompt,
                 negative_prompt=neg_prompt,
                 num_images_per_prompt=3,
                 guidance_scale=7.5,
-                num_inference_steps=40,
+                num_inference_steps=28,
             ).images
 
             for i, img in enumerate(images):
-                self._save_hf_images(img, i, prompt_summary, folder, pipe_data["folder"])
+                self._save_hf_images(img, i, prompt_summary, out_path)
 
     def _sanitize_prompt(self, raw_prompt, flagged_categories=None):
         system_prompt = (
@@ -143,7 +142,7 @@ class ImageGenerator:
             decoded_img_data = base64.b64decode(b64_img)
             img = Image.open(BytesIO(decoded_img_data))
             time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-            file_name = f"{self.dalle_folder}/{self.current_day}/{model_folder}/{prompt_summary}_{time}_{i}.png"
+            file_name = f"{self.gen_main_path}/{self.dalle_folder}/{self.current_day}/{model_folder}/{prompt_summary}_{time}_{i}.png"
             img.save(file_name)
             self.logger.info(f"Saved image: {file_name}")
 
@@ -209,9 +208,9 @@ class ImageGenerator:
         except (APIConnectionError, PermissionError, BadRequestError) as e:
             self._log_and_exit(e, prompt_summary)
 
-    def _save_hf_images(self, img, i, prompt_summary, folder, model_foler):
+    def _save_hf_images(self, img, i, prompt_summary, out_path):
         time = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
-        img_path = f"{folder}/{self.current_day}/{model_foler}/{prompt_summary}_{time}_{i}.png"
+        img_path = f"{out_path}/{prompt_summary}_{time}_{i}.png"
         self.logger.info(f"Saving image: {img_path}")
         img.save(img_path)
 
@@ -237,6 +236,8 @@ class ImageGenerator:
             negative_prompt = prompt["original"]["negative"]
 
         return positive_prompt, negative_prompt, prompt_summary
+
+    # ======================== GENERATION ========================
 
     def generate_existing_prompts(self):
         """Generates images for all prompts in the prompt collection, with all available models."""

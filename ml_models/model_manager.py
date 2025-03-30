@@ -74,6 +74,7 @@ class ModelManager:
             torch_dtype=torch.float16,
         )
         pipe.enable_model_cpu_offload()
+
         return {"pipe": pipe, "folder": folder}
 
     async def _load_sd_model(self):
